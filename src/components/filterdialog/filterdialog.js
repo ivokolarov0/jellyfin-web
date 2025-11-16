@@ -3,6 +3,7 @@ import dialogHelper from '../dialogHelper/dialogHelper';
 import globalize from '../../lib/globalize';
 import { ServerConnections } from 'lib/jellyfin-apiclient';
 import union from 'lodash-es/union';
+import debounce from 'lodash-es/debounce';
 import Events from '../../utils/events.ts';
 import '../../elements/emby-checkbox/emby-checkbox';
 import '../../elements/emby-collapse/emby-collapse';
@@ -18,8 +19,41 @@ function merge(resultItems, queryItems, delimiter) {
     return union(resultItems, queryItems.split(delimiter)).sort();
 }
 
+/**
+     * @param container {HTMLDivElement} Container element
+     * @param items {string[]} Items to filter
+     * @param minItemsForSearch {number} Minimum items for search
+     * @returns {HTMLInputElement|null} Search input or null
+     */
+function renderFilterSearch(container, items, minItemsForSearch = 10) {
+    if (items.length <= minItemsForSearch) {
+        return null;
+    }
+
+    const input = document.createElement('input');
+    input.type = 'search';
+    input.setAttribute('is', 'emby-input');
+    input.placeholder = globalize.translate('Search');
+
+    const checkboxes = [...container.querySelectorAll('input[type="checkbox"]')];
+    const entries = checkboxes.map(checkbox => ({
+        label: checkbox.parentElement,
+        text: checkbox.parentElement.textContent.toLowerCase()
+    }));
+
+    input.addEventListener('input', debounce(() => {
+        const filterValue = input.value.toLowerCase();
+        for (const entry of entries) {
+            entry.label.classList.toggle('hide', !entry.text.includes(filterValue));
+        }
+    }, 150));
+
+    return input;
+}
+
 function renderOptions(context, selector, cssClass, items, isCheckedFn) {
     const elem = context.querySelector(selector);
+    const filterOptions = elem.querySelector('.filterOptions');
     if (items.length) {
         elem.classList.remove('hide');
     } else {
@@ -37,7 +71,11 @@ function renderOptions(context, selector, cssClass, items, isCheckedFn) {
         return itemHtml;
     }).join('');
     html += '</div>';
-    elem.querySelector('.filterOptions').innerHTML = html;
+    filterOptions.innerHTML = html;
+    const filterSearch = renderFilterSearch(elem, items);
+    if (filterSearch) {
+        filterOptions.prepend(filterSearch);
+    }
 }
 
 function renderFilters(context, result, query) {
