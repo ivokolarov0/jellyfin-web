@@ -26,9 +26,11 @@ import FiltersStudios from './FiltersStudios';
 import FiltersTags from './FiltersTags';
 import FiltersVideoTypes from './FiltersVideoTypes';
 import FiltersYears from './FiltersYears';
+import SearchField from '../SearchField';
 
 import { LibraryViewSettings, ParentId } from 'types/library';
 import { LibraryTab } from 'types/libraryTab';
+import { type BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 
 const Accordion = styled((props: AccordionProps) => (
     <MuiAccordion
@@ -113,6 +115,11 @@ const FilterButton: FC<FilterButtonProps> = ({
     const handleClose = useCallback(() => {
         setAnchorEl(null);
     }, []);
+
+    const handleFiltersStudiosSearch = useCallback(
+        (item: BaseItemDto, query: string) => Boolean(item.Name && item.Name.toLowerCase().includes(query)),
+        []
+    );
 
     const isFiltersLegacyEnabled = () => {
         return (
@@ -321,15 +328,19 @@ const FilterButton: FC<FilterButtonProps> = ({
                                     </Typography>
                                 </AccordionSummary>
                                 <AccordionDetails>
-                                    <FiltersGenres
-                                        genresOptions={data.Genres}
-                                        libraryViewSettings={
-                                            libraryViewSettings
-                                        }
-                                        setLibraryViewSettings={
-                                            setLibraryViewSettings
-                                        }
-                                    />
+                                    <SearchField items={data.Genres}>
+                                        {(filteredItems) => (
+                                            <FiltersGenres
+                                                genresOptions={filteredItems}
+                                                libraryViewSettings={
+                                                    libraryViewSettings
+                                                }
+                                                setLibraryViewSettings={
+                                                    setLibraryViewSettings
+                                                }
+                                            />
+                                        )}
+                                    </SearchField>
                                 </AccordionDetails>
                             </Accordion>
                         )}
@@ -382,15 +393,19 @@ const FilterButton: FC<FilterButtonProps> = ({
                                     </Typography>
                                 </AccordionSummary>
                                 <AccordionDetails>
-                                    <FiltersTags
-                                        tagsOptions={data.Tags}
-                                        libraryViewSettings={
-                                            libraryViewSettings
-                                        }
-                                        setLibraryViewSettings={
-                                            setLibraryViewSettings
-                                        }
-                                    />
+                                    <SearchField items={data.Tags}>
+                                        {(filteredItems) => (
+                                            <FiltersTags
+                                                tagsOptions={filteredItems}
+                                                libraryViewSettings={
+                                                    libraryViewSettings
+                                                }
+                                                setLibraryViewSettings={
+                                                    setLibraryViewSettings
+                                                }
+                                            />
+                                        )}
+                                    </SearchField>
                                 </AccordionDetails>
                             </Accordion>
                         )}
@@ -409,15 +424,19 @@ const FilterButton: FC<FilterButtonProps> = ({
                                     </Typography>
                                 </AccordionSummary>
                                 <AccordionDetails>
-                                    <FiltersYears
-                                        yearsOptions={data.Years}
-                                        libraryViewSettings={
-                                            libraryViewSettings
-                                        }
-                                        setLibraryViewSettings={
-                                            setLibraryViewSettings
-                                        }
-                                    />
+                                    <SearchField items={data.Years}>
+                                        {(filteredItems) => (
+                                            <FiltersYears
+                                                yearsOptions={filteredItems}
+                                                libraryViewSettings={
+                                                    libraryViewSettings
+                                                }
+                                                setLibraryViewSettings={
+                                                    setLibraryViewSettings
+                                                }
+                                            />
+                                        )}
+                                    </SearchField>
                                 </AccordionDetails>
                             </Accordion>
                         )}
@@ -437,13 +456,20 @@ const FilterButton: FC<FilterButtonProps> = ({
                             </Typography>
                         </AccordionSummary>
                         <AccordionDetails>
-                            <FiltersStudios
-                                studiosOptions={studios}
-                                libraryViewSettings={libraryViewSettings}
-                                setLibraryViewSettings={
-                                    setLibraryViewSettings
-                                }
-                            />
+                            <SearchField
+                                items={studios}
+                                customFilter={handleFiltersStudiosSearch}
+                            >
+                                {(filteredItems) => (
+                                    <FiltersStudios
+                                        studiosOptions={filteredItems}
+                                        libraryViewSettings={libraryViewSettings}
+                                        setLibraryViewSettings={
+                                            setLibraryViewSettings
+                                        }
+                                    />
+                                )}
+                            </SearchField>
                         </AccordionDetails>
                     </Accordion>
                 )}
